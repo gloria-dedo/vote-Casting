@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: UNLICENSED
+
+pragma solidity ^0.8.4;
+
+contract Voting {
+    // Define an Appropriate Data Type to Store Candidates
+    struct Candidate {
+        uint256 id;
+        string name;
+        uint256 voteCount;
+    }
+
+    // Define an Appropriate Data Type to Track If Voter has Already Voted
+    mapping(address => bool) public hasVoted;
+
+    // Store Candidates
+    mapping(uint256 => Candidate) public candidates;
+    uint256 public candidatesCount;
+
+    // Adds New Candidate
+    function addCandidate(string memory _name) public {
+        candidatesCount++;
+        candidates[candidatesCount] = Candidate(candidatesCount, _name, 0);
+    }
+
+    // Removes Already Added Candidate
+    function removeCandidate(uint256 _candidateId) public {
+        require(_candidateId > 0 && _candidateId <= candidatesCount, "Invalid candidate ID");
+        require(candidates[_candidateId].id == _candidateId, "Candidate not found");
+
+        // Delete candidate and shift the remaining candidates
+        for (uint256 i = _candidateId; i < candidatesCount; i++) {
+            candidates[i] = candidates[i + 1];
+        }
+        delete candidates[candidatesCount];
+        candidatesCount--;
+    }
+
+    // Retrieves All Candidates for Viewing
+    function getAllCandidates() public view returns (Candidate[] memory) {
+        Candidate[] memory _candidates = new Candidate[](candidatesCount);
+        for (uint256 i = 1; i <= candidatesCount; i++) {
+            _candidates[i - 1] = candidates[i];
+        }
+        return _candidates;
+    }
+
+    // Allows Voter to Cast a Vote for a Single Candidate
+    function castVote(uint256 _candidateId) public {
+        require(_candidateId > 0 && _candidateId <= candidatesCount, "Invalid candidate ID");
+        require(!hasVoted[msg.sender], "You have already voted");
+
+        candidates[_candidateId].voteCount++;
+        hasVoted[msg.sender] = true;
+    }
+}
